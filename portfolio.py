@@ -95,7 +95,7 @@ with st.sidebar:
     st.write("### 📬 Contato")
 
     st.markdown("📱 **Celular:** " 
-        "[Clique aqui para iniciar conversa](https://wa.me)"
+        "[+55 (11) 96024-0070](tel:+5511960240070)"
 )
 
 

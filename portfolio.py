@@ -342,4 +342,4 @@ with col2:
         f"https://github-readme-stats.vercel.app/api/top-langs/?username={GITHUB_USERNAME}&layout=compact"
     )
 
-st.subheader
+st.subheader("🔥 Calendário de Contribuições")

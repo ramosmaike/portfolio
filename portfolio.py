@@ -5,15 +5,24 @@ import plotly.express as px
 import base64
 
 # =====================================================
-# CONFIG
+# CONFIGURAÇÃO
 # =====================================================
 
 GITHUB_USERNAME = "ramosmaike"
-LINKEDIN_URL = "https://www.linkedin.com/in/maike-system"
+
+NOME = "Maike Ramos"
+CARGO = "Analista de Dados | Data Science | Automação Python"
+
 EMAIL = "maikesystem@gmail.com"
 
+LINKEDIN = "https://www.linkedin.com/in/maike-system"
+
+# =====================================================
+# STREAMLIT
+# =====================================================
+
 st.set_page_config(
-    page_title="Maike Ramos | Portfolio",
+    page_title="Maike Ramos | Portfólio",
     page_icon="🚀",
     layout="wide"
 )
@@ -25,21 +34,42 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-.main{
-    background-color:#f8fafc;
+.main {
+    background-color: #f8fafc;
+}
+
+.block-container{
+    padding-top:2rem;
+}
+
+.metric-card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0px 2px 8px rgba(0,0,0,0.08);
 }
 
 .repo-card{
-    padding:20px;
-    border-radius:10px;
     background:white;
-    border-left:5px solid #238636;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0px 2px 8px rgba(0,0,0,0.08);
     margin-bottom:15px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.hero-title{
+    font-size:42px;
+    font-weight:bold;
+}
+
+.hero-subtitle{
+    font-size:20px;
+    color:#666;
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",
+unsafe_allow_html=True)
 
 # =====================================================
 # HEADERS
@@ -49,16 +79,18 @@ def get_headers():
 
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "StreamlitPortfolio"
+        "User-Agent": "Portfolio-App"
     }
 
     if "GITHUB_TOKEN" in st.secrets:
-        headers["Authorization"] = f"Bearer {st.secrets['GITHUB_TOKEN']}"
+        headers["Authorization"] = (
+            f"Bearer {st.secrets['GITHUB_TOKEN']}"
+        )
 
     return headers
 
 # =====================================================
-# GITHUB API
+# PERFIL
 # =====================================================
 
 @st.cache_data(ttl=600)
@@ -68,7 +100,8 @@ def get_profile(username):
 
     response = requests.get(
         url,
-        headers=get_headers()
+        headers=get_headers(),
+        timeout=20
     )
 
     if response.status_code == 200:
@@ -77,25 +110,28 @@ def get_profile(username):
     return None
 
 # =====================================================
-# REPOS
+# REPOSITÓRIOS
 # =====================================================
 
 @st.cache_data(ttl=600)
 def get_repositories(username):
 
-    url = f"https://api.github.com/users/{username}/repos?sort=updated&per_page=100"
+    url = (
+        f"https://api.github.com/users/"
+        f"{username}/repos?per_page=100"
+    )
 
     response = requests.get(
         url,
-        headers=get_headers()
+        headers=get_headers(),
+        timeout=20
     )
 
     if response.status_code == 200:
 
         repos = response.json()
 
-        repos = sorted(
-            repos,
+        repos.sort(
             key=lambda x: x["stargazers_count"],
             reverse=True
         )
@@ -109,31 +145,38 @@ def get_repositories(username):
 # =====================================================
 
 @st.cache_data(ttl=600)
-def get_readme(owner, repo):
+def get_readme(user, repo):
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/readme"
+    url = (
+        f"https://api.github.com/repos/"
+        f"{user}/{repo}/readme"
+    )
 
     response = requests.get(
         url,
-        headers=get_headers()
+        headers=get_headers(),
+        timeout=20
     )
 
     if response.status_code == 200:
 
         content = response.json()["content"]
 
-        return base64.b64decode(content).decode(
-            "utf-8",
-            errors="ignore"
-        )
+        try:
+            return base64.b64decode(content).decode(
+                "utf-8",
+                errors="ignore"
+            )
+        except:
+            return None
 
     return None
 
 # =====================================================
-# LOAD
+# DADOS
 # =====================================================
 
-profile = get_profile(GITHUB_USERNAME)
+perfil = get_profile(GITHUB_USERNAME)
 repos = get_repositories(GITHUB_USERNAME)
 
 # =====================================================
@@ -142,32 +185,35 @@ repos = get_repositories(GITHUB_USERNAME)
 
 with st.sidebar:
 
-    if profile:
+    if perfil:
 
         st.image(
-            profile["avatar_url"],
-            width=180
+            perfil["avatar_url"],
+            width=220
         )
 
         st.title(
-            profile.get("name", GITHUB_USERNAME)
+            perfil.get("name", NOME)
         )
 
         st.write(
-            profile.get(
+            perfil.get(
                 "bio",
-                "Data Scientist"
+                CARGO
             )
         )
 
+    else:
+
+        st.title(NOME)
+        st.write(CARGO)
+
     st.divider()
 
-    st.markdown(
-        f"📧 **Email:** {EMAIL}"
-    )
+    st.markdown(f"📧 **{EMAIL}**")
 
     st.markdown(
-        f"{LINKEDIN_URL}"
+        f"{LINKEDIN}"
     )
 
     st.markdown(
@@ -175,4 +221,125 @@ with st.sidebar:
     )
 
 # =====================================================
-# HEADER
+# HERO
+# =====================================================
+
+st.markdown(
+    f"""
+    <div class="hero-title">
+    🚀 {NOME}
+    </div>
+
+    <div class="hero-subtitle">
+    {CARGO}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.write("")
+
+# =====================================================
+# MÉTRICAS
+# =====================================================
+
+c1, c2, c3, c4 = st.columns(4)
+
+c1.metric(
+    "Repos Públicos",
+    perfil["public_repos"] if perfil else 0
+)
+
+c2.metric(
+    "Seguidores",
+    perfil["followers"] if perfil else 0
+)
+
+c3.metric(
+    "Following",
+    perfil["following"] if perfil else 0
+)
+
+c4.metric(
+    "Projetos",
+    len(repos)
+)
+
+st.divider()
+
+# =====================================================
+# GRÁFICOS
+# =====================================================
+
+st.header("📊 Analytics")
+
+linguagens = {}
+
+for repo in repos:
+
+    linguagem = repo.get("language")
+
+    if linguagem:
+
+        linguagens[linguagem] = (
+            linguagens.get(linguagem, 0) + 1
+        )
+
+if linguagens:
+
+    df_lang = pd.DataFrame({
+        "Linguagem": linguagens.keys(),
+        "Repos": linguagens.values()
+    })
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        fig = px.pie(
+            df_lang,
+            names="Linguagem",
+            values="Repos",
+            title="Linguagens Utilizadas"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    with col2:
+
+        fig2 = px.bar(
+            df_lang,
+            x="Linguagem",
+            y="Repos",
+            title="Quantidade por Linguagem"
+        )
+
+        st.plotly_chart(
+            fig2,
+            use_container_width=True
+        )
+
+# =====================================================
+# ESTATÍSTICAS GITHUB
+# =====================================================
+
+st.header("📈 GitHub Stats")
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    st.image(
+        f"https://github-readme-stats.vercel.app/api?username={GITHUB_USERNAME}&show_icons=true"
+    )
+
+with col2:
+
+    st.image(
+        f"https://github-readme-stats.vercel.app/api/top-langs/?username={GITHUB_USERNAME}&layout=compact"
+    )
+
+st.subheader

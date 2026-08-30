@@ -100,7 +100,8 @@ with st.sidebar:
 
     st.markdown(
         "🔗 **LinkedIn:** "
-        "[linkedin.com/in/maike-system](https://www.linkedin.com/in/maike-system)"
+        "[linkedin.com/in/maike-system](https://www.linkedin.com/in/maike
+        -system)"
     )
 
     st.markdown(

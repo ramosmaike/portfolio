@@ -7,7 +7,7 @@ import requests
 # --- CONFIGURAÇÃO DO USUÁRIO (Preencha seus dados aqui) ---
 # =========================================================
 
-GITHUB_USERNAME = "ramosmaike"  
+GITHUB_USERNAME = "/ramosmaike"  
 LINKEDIN_URL = "https://www.linkedin.com/in/maike-system"
 EMAIL_CONTATO = "maikesystem@gmail.com"
 
@@ -25,15 +25,14 @@ st.set_page_config(
 # --- FUNÇÕES PARA BUSCAR DADOS DO GITHUB COM REQUESTS ---
 def get_headers():
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'Accept': 'application/vnd.github.v3+json'
     }
-    # Tenta pegar o token de forma segura se ele estiver configurado no painel da nuvem
+    # Procura o token salvo no painel Secrets do Streamlit Cloud
     if "GITHUB_TOKEN" in st.secrets:
         headers['Authorization'] = f"token {st.secrets['GITHUB_TOKEN']}"
-    elif GITHUB_TOKEN:
-        headers['Authorization'] = f"token {GITHUB_TOKEN}"
     return headers
+
 
 @st.cache_data(ttl=300)
 def fetch_github_data(username):

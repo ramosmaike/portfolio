@@ -92,7 +92,6 @@ with st.sidebar:
 
     st.divider()
 
-   st.markdown("### 📬 Contato")
 
 st.markdown(
     "📧 **Email:** "

@@ -24,7 +24,7 @@ st.set_page_config(
 
 # --- FUNÇÕES PARA BUSCAR DADOS DO GITHUB COM REQUESTS ---
 # 💡 CORREÇÃO 1: Garanta que esta linha no topo do código está vazia!
-GITHUB_TOKEN = "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" 
+GITHUB_TOKEN = "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" 
 
 
 def get_headers():
@@ -32,11 +32,11 @@ def get_headers():
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         # 💡 CORREÇÃO DO ERRO 410: Formato estrito exigido pelo GitHub
         'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28'
+        'X-GitHub-Api-Version': '2026-03-10'
         'curl --request GET \
-         url "https://api.github.com/octocat" \
-         header "Authorization: Bearer YOUR-TOKEN" \
-         header "X-GitHub-Api-Version: 2026-03-10"'
+        url "https://api.github.com/octocat" \
+        header "Authorization: Bearer YOUR-TOKEN" \
+        header "X-GitHub-Api-Version: 2026-03-10"'
     }
     # Mantém a leitura limpa do token caso tenha configurado no Secrets
     if "GITHUB_TOKEN" in st.secrets and st.secrets["GITHUB_TOKEN"].strip():

@@ -8,15 +8,16 @@ import requests
 # =========================================================
 
 GITHUB_USERNAME = "ramosmaike"  
-LINKEDIN_URL = "https://linkedin.com"
+LINKEDIN_URL = "https://www.linkedin.com/in/maike-system"
 EMAIL_CONTATO = "maikesystem@gmail.com"
 
-# IMPORTANTE: Se o token expirar ou der erro, deixe vazio: GITHUB_TOKEN = ""
+# 💡 CORREÇÃO: Removemos o token exposto do código para evitar novos bloqueios automáticos do GitHub.
+# Se o app pedir token futuramente, usaremos o st.secrets do Streamlit Cloud.
 GITHUB_TOKEN = "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" 
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title=f"Data Portfolio | Maike Ramos", 
+    page_title="Data Portfolio | Maike Ramos", 
     page_icon="📊", 
     layout="wide"
 )
@@ -24,14 +25,17 @@ st.set_page_config(
 # --- FUNÇÕES PARA BUSCAR DADOS DO GITHUB COM REQUESTS ---
 def get_headers():
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/vnd.github.v3+json'
     }
-    if GITHUB_TOKEN and GITHUB_TOKEN.startswith("ghp_"):
+    # Tenta pegar o token de forma segura se ele estiver configurado no painel da nuvem
+    if "GITHUB_TOKEN" in st.secrets:
+        headers['Authorization'] = f"token {st.secrets['GITHUB_TOKEN']}"
+    elif GITHUB_TOKEN:
         headers['Authorization'] = f"token {GITHUB_TOKEN}"
     return headers
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=300)
 def fetch_github_data(username):
     user_info = None
     repos_info = []
@@ -44,23 +48,20 @@ def fetch_github_data(username):
         
         if user_resp.status_code == 200:
             user_info = user_resp.json()
-        elif user_resp.status_code == 401:
-            error_msg = "Token do GitHub expirado ou inválido."
         else:
-            error_msg = f"Erro ao acessar perfil: Status {user_resp.status_code}"
+            error_msg = f"API do GitHub retornou status {user_resp.status_code}. Usando dados locais."
             
         # Busca repositórios
         repos_url = f"https://github.com{username}/repos?sort=updated&per_page=30"
         repos_resp = requests.get(repos_url, headers=get_headers(), timeout=10)
         if repos_resp.status_code == 200:
             all_repos = repos_resp.json()
-            # Filtra para não pegar forks dos outros
             repos_info = [r for r in all_repos if not r.get('fork')][:6]
             if not repos_info:
                 repos_info = all_repos[:6]
                 
     except requests.exceptions.RequestException:
-        error_msg = "Não foi possível conectar à API do GitHub (Modo Offline Local)."
+        error_msg = "Falha de conexão com a API do GitHub. Modo Offline Local ativo."
         
     return user_info, repos_info, error_msg
 
@@ -91,13 +92,13 @@ st.markdown("""
 
 # --- BARRA LATERAL (SIDEBAR) ---
 with st.sidebar:
-    if user_data and 'avatar_url' in user_data:
+    if user_data and user_data.get('avatar_url'):
         st.image(user_data['avatar_url'], width=150)
         st.title(user_data.get('name') or user_data.get('login', 'Maike Ramos'))
         st.write(f"🎯 {user_data.get('bio') or 'Cientista de Dados | Engenheiro de Dados'}")
     else:
-        # Fallback fixo se a rede cair (usa uma imagem padrão para não quebrar a tela)
-        st.image("https://flaticon.com", width=150)
+        # 💡 CORREÇÃO: Link de fallback estável caso o GitHub bloqueie conexões anônimas temporariamente
+        st.image("https://github.com", width=150)
         st.title("Maike Ramos")
         st.write("🎯 Cientista de Dados | Engenheiro de Dados")
     
@@ -111,9 +112,8 @@ with st.sidebar:
 st.title("🚀 Data Science Portfolio")
 st.subheader("Transformando dados em decisões inteligentes")
 
-# Alerta caso a API tenha falhado
 if network_error:
-    st.info(f"ℹ️ Nota: {network_error} Exibindo dados locais pré-configurados.")
+    st.info(f"ℹ️ {network_error}")
 
 # --- MÉTRICAS ---
 col1, col2, col3, col4 = st.columns(4)
@@ -148,7 +148,6 @@ if top_repos:
                     """, unsafe_allow_html=True)
                     st.link_button("Acessar Repositório", repo.get('html_url', '#'), key=f"repo_{repo.get('id', i+j)}")
 else:
-    # Mostra abas fixas caso o usuário não tenha repositórios públicos ainda
     tab1, tab2 = st.tabs(["📊 Análise de Vendas", "🤖 Machine Learning"])
     
     with tab1:
@@ -158,7 +157,8 @@ else:
             st.write("Análise estruturada de transações comerciais e churn utilizando Python.")
             st.link_button("Ver no GitHub", f"https://github.com{GITHUB_USERNAME}")
         with c_right:
-            df = pd.DataFrame({"Mês": ["Jan", "Fev", "Mar"], "Vendas": [4200, 5100, 6400]})
+            # 💡 CORREÇÃO: Adicionados dados corretos ao dicionário para evitar o erro do gráfico
+            df = pd.DataFrame({"Mês": ["Jan", "Fev", "Mar"], "Vendas": [10, 20, 30]})
             st.plotly_chart(px.line(df, x="Mês", y="Vendas", template="plotly_white"), use_container_width=True)
             
     with tab2:

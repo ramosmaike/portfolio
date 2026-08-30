@@ -24,17 +24,25 @@ st.set_page_config(
 
 # --- FUNÇÕES PARA BUSCAR DADOS DO GITHUB COM REQUESTS ---
 # 💡 CORREÇÃO 1: Garanta que esta linha no topo do código está vazia!
-GITHUB_TOKEN = "" 
+GITHUB_TOKEN = "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" 
+
 
 def get_headers():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json'
+        # 💡 CORREÇÃO DO ERRO 410: Formato estrito exigido pelo GitHub
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+        'curl --request GET \
+         url "https://api.github.com/octocat" \
+         header "Authorization: Bearer YOUR-TOKEN" \
+         header "X-GitHub-Api-Version: 2026-03-10"'
     }
-    # Só adiciona autenticação se o token realmente existir e for válido no painel Secrets
+    # Mantém a leitura limpa do token caso tenha configurado no Secrets
     if "GITHUB_TOKEN" in st.secrets and st.secrets["GITHUB_TOKEN"].strip():
         headers['Authorization'] = f"token {st.secrets['GITHUB_TOKEN'].strip()}"
     return headers
+
 
 # 💡 CORREÇÃO 2: Diminuímos o TTL para apenas 5 segundos para limpar o cache travado na hora dos testes
 @st.cache_data(ttl=5)

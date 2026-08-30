@@ -94,6 +94,10 @@ with st.sidebar:
 
     st.write("### 📬 Contato")
 
+   st.markdown("📱 **Celular:** [Clique aqui para iniciar conversa](https://wa.me)"
+)
+
+
     st.markdown("📧 **Email:** "
         "[maikesystem@gmail.com](mailto:maikesystem@gmail.com)"
 )

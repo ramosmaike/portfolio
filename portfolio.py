@@ -23,15 +23,50 @@ st.set_page_config(
 )
 
 # --- FUNÇÕES PARA BUSCAR DADOS DO GITHUB COM REQUESTS ---
+# 💡 CORREÇÃO 1: Garanta que esta linha no topo do código está vazia!
+GITHUB_TOKEN = "" 
+
 def get_headers():
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Accept': 'application/vnd.github.v3+json'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json'
     }
-    # Procura o token salvo no painel Secrets do Streamlit Cloud
-    if "GITHUB_TOKEN" in st.secrets:
-        headers['Authorization'] = f"token {st.secrets['GITHUB_TOKEN']}"
+    # Só adiciona autenticação se o token realmente existir e for válido no painel Secrets
+    if "GITHUB_TOKEN" in st.secrets and st.secrets["GITHUB_TOKEN"].strip():
+        headers['Authorization'] = f"token {st.secrets['GITHUB_TOKEN'].strip()}"
     return headers
+
+# 💡 CORREÇÃO 2: Diminuímos o TTL para apenas 5 segundos para limpar o cache travado na hora dos testes
+@st.cache_data(ttl=5)
+def fetch_github_data(username):
+    user_info = None
+    repos_info = []
+    error_msg = None
+    
+    try:
+        # Busca perfil
+        user_url = f"https://github.com{username}"
+        user_resp = requests.get(user_url, headers=get_headers(), timeout=10)
+        
+        if user_resp.status_code == 200:
+            user_info = user_resp.json()
+        else:
+            # Mostra o status real que o GitHub está devolvendo para sabermos o problema exato
+            error_msg = f"A API do GitHub respondeu com o código {user_resp.status_code}. Carregando dados locais."
+            
+        # Busca repositórios
+        repos_url = f"https://github.com{username}/repos?sort=updated&per_page=30"
+        repos_resp = requests.get(repos_url, headers=get_headers(), timeout=10)
+        if repos_resp.status_code == 200:
+            all_repos = repos_resp.json()
+            repos_info = [r for r in all_repos if not r.get('fork')][:6]
+            if not repos_info:
+                repos_info = all_repos[:6]
+                
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Erro de conexão com o servidor: {str(e)}"
+        
+    return user_info, repos_info, error_msg
 
 
 @st.cache_data(ttl=300)

@@ -92,14 +92,20 @@ with st.sidebar:
 
     st.divider()
 
-    st.write("📧 maikesystem@gmail.com")
+    st.write("### 📬 Contato")
+
+    st.markdown("📧 **Email:** "
+        "[maikesystem@gmail.com](mailto:maikesystem@gmail.com)"
+)
 
     st.markdown(
-        "[LinkedIn](https://linkedin.com/in/maike-system)"
+        "🔗 **LinkedIn:** "
+        "[linkedin.com/in/maike-system](https://www.linkedin.com/in/maike-system)"
     )
 
     st.markdown(
-        "[GitHub](https://github.com/ramosmaike)"
+        "🐙 **GitHub:** "
+        "[github.com/ramosmaike](https://github.com/ramosmaike)"
     )
 
 # ==========================

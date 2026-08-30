@@ -4,22 +4,18 @@ import pandas as pd
 import plotly.express as px
 import base64
 
-# =====================================================
-# CONFIGURAÇÃO
-# =====================================================
+# ==========================================
+# CONFIG
+# ==========================================
 
 GITHUB_USERNAME = "ramosmaike"
 
 NOME = "Maike Ramos"
-CARGO = "Analista de Dados | Data Science | Automação Python"
+TITULO = "Analista de Dados | Data Science"
 
 EMAIL = "maikesystem@gmail.com"
 
 LINKEDIN = "https://www.linkedin.com/in/maike-system"
-
-# =====================================================
-# STREAMLIT
-# =====================================================
 
 st.set_page_config(
     page_title="Maike Ramos | Portfólio",
@@ -27,109 +23,64 @@ st.set_page_config(
     layout="wide"
 )
 
-# =====================================================
+# ==========================================
 # CSS
-# =====================================================
+# ==========================================
 
 st.markdown("""
 <style>
-
-.main {
-    background-color: #f8fafc;
-}
 
 .block-container{
     padding-top:2rem;
 }
 
-.metric-card{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0px 2px 8px rgba(0,0,0,0.08);
-}
-
 .repo-card{
-    background:white;
     padding:20px;
     border-radius:12px;
-    box-shadow:0px 2px 8px rgba(0,0,0,0.08);
+    background:white;
+    border:1px solid #e5e7eb;
     margin-bottom:15px;
 }
 
-.hero-title{
-    font-size:42px;
-    font-weight:bold;
-}
-
-.hero-subtitle{
-    font-size:20px;
-    color:#666;
-}
-
 </style>
-""",
-unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# =====================================================
-# HEADERS
-# =====================================================
+# ==========================================
+# GITHUB
+# ==========================================
 
-def get_headers():
-
-    headers = {
+def headers():
+    return {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "Portfolio-App"
+        "User-Agent": "Streamlit"
     }
 
-    if "GITHUB_TOKEN" in st.secrets:
-        headers["Authorization"] = (
-            f"Bearer {st.secrets['GITHUB_TOKEN']}"
-        )
-
-    return headers
-
-# =====================================================
-# PERFIL
-# =====================================================
-
 @st.cache_data(ttl=600)
-def get_profile(username):
+def get_profile():
 
-    url = f"https://api.github.com/users/{username}"
+    url = f"https://api.github.com/users/{GITHUB_USERNAME}"
 
-    response = requests.get(
-        url,
-        headers=get_headers(),
-        timeout=20
-    )
+    r = requests.get(url, headers=headers(), timeout=20)
 
-    if response.status_code == 200:
-        return response.json()
+    if r.status_code == 200:
+        return r.json()
 
     return None
 
-# =====================================================
-# REPOSITÓRIOS
-# =====================================================
 
 @st.cache_data(ttl=600)
-def get_repositories(username):
+def get_repos():
 
     url = (
         f"https://api.github.com/users/"
-        f"{username}/repos?per_page=100"
+        f"{GITHUB_USERNAME}/repos?per_page=100"
     )
 
-    response = requests.get(
-        url,
-        headers=get_headers(),
-        timeout=20
-    )
+    r = requests.get(url, headers=headers(), timeout=20)
 
-    if response.status_code == 200:
+    if r.status_code == 200:
 
-        repos = response.json()
+        repos = r.json()
 
         repos.sort(
             key=lambda x: x["stargazers_count"],
@@ -140,48 +91,40 @@ def get_repositories(username):
 
     return []
 
-# =====================================================
-# README
-# =====================================================
 
 @st.cache_data(ttl=600)
-def get_readme(user, repo):
+def get_readme(repo):
 
     url = (
         f"https://api.github.com/repos/"
-        f"{user}/{repo}/readme"
+        f"{GITHUB_USERNAME}/{repo}/readme"
     )
 
-    response = requests.get(
+    r = requests.get(
         url,
-        headers=get_headers(),
+        headers=headers(),
         timeout=20
     )
 
-    if response.status_code == 200:
+    if r.status_code == 200:
 
-        content = response.json()["content"]
+        conteudo = r.json()["content"]
 
-        try:
-            return base64.b64decode(content).decode(
-                "utf-8",
-                errors="ignore"
-            )
-        except:
-            return None
+        return (
+            base64
+            .b64decode(conteudo)
+            .decode("utf-8", errors="ignore")
+        )
 
     return None
 
-# =====================================================
-# DADOS
-# =====================================================
 
-perfil = get_profile(GITHUB_USERNAME)
-repos = get_repositories(GITHUB_USERNAME)
+perfil = get_profile()
+repos = get_repos()
 
-# =====================================================
+# ==========================================
 # SIDEBAR
-# =====================================================
+# ==========================================
 
 with st.sidebar:
 
@@ -197,20 +140,17 @@ with st.sidebar:
         )
 
         st.write(
-            perfil.get(
-                "bio",
-                CARGO
-            )
+            perfil.get("bio", TITULO)
         )
 
     else:
 
         st.title(NOME)
-        st.write(CARGO)
+        st.write(TITULO)
 
     st.divider()
 
-    st.markdown(f"📧 **{EMAIL}**")
+    st.write("📧", EMAIL)
 
     st.markdown(
         f"{LINKEDIN}"
@@ -220,33 +160,24 @@ with st.sidebar:
         f"[GitHub](https://github.com/{GITHUB_USERNAME})"
     )
 
-# =====================================================
-# HERO
-# =====================================================
+# ==========================================
+# CABEÇALHO
+# ==========================================
 
-st.markdown(
-    f"""
-    <div class="hero-title">
-    🚀 {NOME}
-    </div>
+st.title("🚀 Portfólio Data Science")
 
-    <div class="hero-subtitle">
-    {CARGO}
-    </div>
-    """,
-    unsafe_allow_html=True
+st.subheader(
+    "Transformando dados em decisões"
 )
 
-st.write("")
-
-# =====================================================
+# ==========================================
 # MÉTRICAS
-# =====================================================
+# ==========================================
 
 c1, c2, c3, c4 = st.columns(4)
 
 c1.metric(
-    "Repos Públicos",
+    "Repos",
     perfil["public_repos"] if perfil else 0
 )
 
@@ -265,13 +196,13 @@ c4.metric(
     len(repos)
 )
 
+# ==========================================
+# ESTATÍSTICAS
+# ==========================================
+
 st.divider()
 
-# =====================================================
-# GRÁFICOS
-# =====================================================
-
-st.header("📊 Analytics")
+st.header("📊 Linguagens")
 
 linguagens = {}
 
@@ -287,59 +218,146 @@ for repo in repos:
 
 if linguagens:
 
-    df_lang = pd.DataFrame({
+    df = pd.DataFrame({
         "Linguagem": linguagens.keys(),
         "Repos": linguagens.values()
     })
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        fig = px.pie(
-            df_lang,
-            names="Linguagem",
-            values="Repos",
-            title="Linguagens Utilizadas"
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
-
-    with col2:
-
-        fig2 = px.bar(
-            df_lang,
-            x="Linguagem",
-            y="Repos",
-            title="Quantidade por Linguagem"
-        )
-
-        st.plotly_chart(
-            fig2,
-            use_container_width=True
-        )
-
-# =====================================================
-# ESTATÍSTICAS GITHUB
-# =====================================================
-
-st.header("📈 GitHub Stats")
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.image(
-        f"https://github-readme-stats.vercel.app/api?username={GITHUB_USERNAME}&show_icons=true"
+    fig = px.pie(
+        df,
+        names="Linguagem",
+        values="Repos"
     )
 
-with col2:
-
-    st.image(
-        f"https://github-readme-stats.vercel.app/api/top-langs/?username={GITHUB_USERNAME}&layout=compact"
+    st.plotly_chart(
+        fig,
+        use_container_width=True
     )
 
-st.subheader("🔥 Calendário de Contribuições")
+# ==========================================
+# PROJETOS
+# ==========================================
+
+st.divider()
+
+st.header("📂 Projetos")
+
+for repo in repos[:8]:
+
+    descricao = repo.get(
+        "description",
+        "Sem descrição"
+    )
+
+    st.markdown(
+        f"""
+        <div class='repo-card'>
+        <h3>{repo['name']}</h3>
+
+        <p>{descricao}</p>
+
+        ⭐ {repo['stargazers_count']}
+        |
+        🍴 {repo['forks_count']}
+        |
+        💻 {repo.get('language','N/A')}
+        </div>
+        """,
+
+        unsafe_allow_html=True
+    )
+
+    st.link_button(
+        "Abrir Repositório",
+        repo["html_url"]
+    )
+
+# ==========================================
+# README
+# ==========================================
+
+st.divider()
+
+st.header("📖 README")
+
+if repos:
+
+    repo_escolhido = st.selectbox(
+        "Escolha um projeto",
+        [r["name"] for r in repos]
+    )
+
+    readme = get_readme(
+        repo_escolhido
+    )
+
+    if readme:
+
+        with st.expander(
+            "Visualizar README",
+            expanded=True
+        ):
+            st.markdown(readme)
+
+    else:
+
+        st.warning(
+            "README não encontrado."
+        )
+
+# ==========================================
+# HABILIDADES
+# ==========================================
+
+st.divider()
+
+st.header("🛠️ Skills")
+
+skills = {
+    "Python":95,
+    "SQL":90,
+    "Streamlit":95,
+    "Pandas":90,
+    "Power BI":85,
+    "Machine Learning":80,
+    "Selenium":90
+}
+
+for nome, valor in skills.items():
+
+    st.write(nome)
+
+    st.progress(valor)
+
+# ==========================================
+# SOBRE
+# ==========================================
+
+st.divider()
+
+st.header("👨‍💻 Sobre")
+
+st.write("""
+Profissional focado em Data Science,
+Python, automação, ETL,
+Machine Learning,
+dashboards e análise de dados.
+""")
+
+# ==========================================
+# CONTATO
+# ==========================================
+
+st.divider()
+
+st.header("📬 Contato")
+
+st.write(f"Email: {EMAIL}")
+st.write(f"LinkedIn: {LINKEDIN}")
+st.write(f"GitHub: https://github.com/{GITHUB_USERNAME}")
+
+st.divider()
+
+st.caption(
+    "Desenvolvido com Streamlit 🚀"
+)
